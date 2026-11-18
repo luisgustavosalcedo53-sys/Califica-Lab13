@@ -7,11 +7,13 @@
 <link rel="stylesheet" th:href="@{/css/estilos.css}">
 </head>
 <body>
-<header class="topbar"><nav class="container">
-<a th:href="@{/reportes}">Califica · Reportes</a>
+<header class="barra">
+<a class="marca" th:href="@{/reportes}">Califica <span>★</span></a>
+<nav aria-label="Reportes">
+<a th:href="@{/reportes}">Categorías</a>
 <a th:href="@{/reportes/usuarios}">Usuarios</a>
 </nav></header>
-<main class="container">
+<main>
 <h1>Reportes por categoría</h1>
 <table><thead><tr><th>Categoría</th><th>Streams</th><th>Calificaciones</th><th>Promedio</th></tr></thead>
 <tbody><tr th:each="fila : ${categorias}">
@@ -22,3 +24,4 @@
 </main>
 </body>
 </html>
+
