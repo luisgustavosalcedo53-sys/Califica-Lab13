@@ -149,4 +149,3 @@ public class ReporteService {
         return lista.stream().mapToInt(Calificacion::puntuacion).average().orElse(0);
     }
 }
-

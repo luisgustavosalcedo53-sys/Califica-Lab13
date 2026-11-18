@@ -29,5 +29,3 @@ Las pruebas de Go se ejecutan con `go test ./...` desde `recomendaciones-service
 ```sh
 docker images 'califica-microservicios-*'
 ```
-
-
