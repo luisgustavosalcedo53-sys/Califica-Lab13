@@ -1,29 +1,38 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Historial de usuario | Califica</title>
-<link rel="stylesheet" th:href="@{/css/estilos.css}">
-</head>
+<head th:replace="~{fragments :: head(${perfil.usuario().nombre()})}"></head>
 <body>
-<header class="barra">
-<a class="marca" th:href="@{/reportes}">Califica <span>★</span></a>
-<nav aria-label="Reportes">
-<a th:href="@{/reportes}">Categorías</a>
-<a th:href="@{/reportes/usuarios}">Usuarios</a>
-</nav></header>
+<header th:replace="~{fragments :: nav('usuarios')}"></header>
+
 <main>
-<h1 th:text="${perfil.usuario.nombre}"></h1>
-<h2>Historial de calificaciones</h2>
-<p th:if="${perfil.historial.isEmpty()}">Este usuario todavía no ha calificado streams.</p>
-<table th:unless="${perfil.historial.isEmpty()}"><thead><tr><th>Stream</th><th>Puntuación</th><th>Comentario</th><th>Fecha</th></tr></thead>
-<tbody><tr th:each="fila : ${perfil.historial}">
-<td th:text="${fila.stream.titulo}"></td><td th:text="${fila.calificacion.puntuacion}"></td>
-<td th:text="${fila.calificacion.comentario}"></td>
-<td th:text="${#temporals.format(fila.calificacion.fecha, 'dd/MM/yyyy HH:mm')}"></td>
-</tr></tbody></table>
+    <a th:href="@{/reportes/usuarios}" class="volver">Volver a usuarios</a>
+    <h1 th:text="${perfil.usuario().nombre()}">Ana Torres</h1>
+    <p class="intro" th:text="${perfil.usuario().email()}">ana@tecsup.edu.pe</p>
+
+    <div class="promedio" th:unless="${perfil.items().isEmpty()}">
+        <span class="promedio-numero" th:text="${#numbers.formatDecimal(perfil.promedio(), 1, 1)}">4,0</span>
+        <span class="tenue" th:text="${perfil.items().size() == 1 ? 'promedio de 1 calificación'
+                                       : 'promedio de ' + perfil.items().size() + ' calificaciones'}">promedio de 2 calificaciones</span>
+    </div>
+
+    <table class="tabla" th:unless="${perfil.items().isEmpty()}">
+        <thead>
+        <tr><th>Stream</th><th>Puntuación</th><th>Comentario</th><th>Fecha</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="i : ${perfil.items()}">
+            <td>
+                <span th:text="${i.titulo()}">Spring Boot desde cero</span>
+                <div class="tenue" th:text="${i.categoria()}">Programación</div>
+            </td>
+            <td class="estrellas"
+                th:text="${#strings.repeat('★', i.puntuacion()) + #strings.repeat('☆', 5 - i.puntuacion())}">★★★★★</td>
+            <td th:text="${#strings.isEmpty(i.comentario()) ? '–' : i.comentario()}">Muy claro</td>
+            <td class="tenue" th:text="${i.fecha() == null ? '' : #temporals.format(i.fecha(), 'dd/MM/yyyy')}">01/11/2026</td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="vacio" th:if="${perfil.items().isEmpty()}">Este usuario todavía no ha calificado ningún stream.</p>
 </main>
 </body>
 </html>
-

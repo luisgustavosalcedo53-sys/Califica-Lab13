@@ -1,27 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reportes por usuario | Califica</title>
-<link rel="stylesheet" th:href="@{/css/estilos.css}">
-</head>
+<head th:replace="~{fragments :: head('Usuarios')}"></head>
 <body>
-<header class="barra">
-<a class="marca" th:href="@{/reportes}">Califica <span>★</span></a>
-<nav aria-label="Reportes">
-<a th:href="@{/reportes}">Categorías</a>
-<a th:href="@{/reportes/usuarios}">Usuarios</a>
-</nav></header>
+<header th:replace="~{fragments :: nav('usuarios')}"></header>
+
 <main>
-<h1>Reportes por usuario</h1>
-<table><thead><tr><th>Usuario</th><th>Calificaciones emitidas</th><th>Promedio otorgado</th></tr></thead>
-<tbody><tr th:each="fila : ${usuarios}">
-<td><a th:href="@{/reportes/usuarios/{id}(id=${fila.usuario.id})}" th:text="${fila.usuario.nombre}"></a></td>
-<td th:text="${fila.calificaciones}"></td>
-<td th:text="${fila.calificaciones == 0 ? 'Sin calificaciones' : #numbers.formatDecimal(fila.promedio, 1, 2)}"></td>
-</tr></tbody></table>
+    <h1>Actividad de los usuarios</h1>
+    <p class="intro">Cuántas calificaciones dio cada usuario y qué puntuación pone en promedio.</p>
+
+    <table class="tabla" th:unless="${usuarios.isEmpty()}">
+        <thead>
+        <tr><th>Usuario</th><th>Calificaciones</th><th>Promedio que otorga</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="u : ${usuarios}">
+            <td>
+                <a th:href="@{/reportes/usuarios/{id}(id=${u.id()})}" th:text="${u.nombre()}">Ana Torres</a>
+                <div class="tenue" th:text="${u.email()}">ana@tecsup.edu.pe</div>
+            </td>
+            <td th:text="${u.calificaciones()}">2</td>
+            <td th:text="${u.calificaciones() == 0 ? '–' : #numbers.formatDecimal(u.promedio(), 1, 1)}">4,0</td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="vacio" th:if="${usuarios.isEmpty()}">Todavía no hay usuarios registrados.</p>
 </main>
 </body>
 </html>
-

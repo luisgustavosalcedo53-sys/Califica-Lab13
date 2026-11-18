@@ -194,20 +194,3 @@ button:hover { background: var(--acento); }
     .ranking-nota { grid-column: 2; text-align: left; }
     .promedio-numero { font-size: 3rem; }
 }
-
-/* Ajustes de presentación para los reportes. */
-table {
-    width: 100%;
-    margin-top: 1rem;
-    border-collapse: collapse;
-}
-th, td {
-    padding: .65rem .55rem;
-    border-bottom: 1px solid var(--linea);
-    text-align: left;
-    vertical-align: top;
-}
-thead th {
-    background: #f4f7f9;
-    font-weight: 600;
-}

@@ -1,27 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reportes por categoría | Califica</title>
-<link rel="stylesheet" th:href="@{/css/estilos.css}">
-</head>
+<head th:replace="~{fragments :: head('Categorías')}"></head>
 <body>
-<header class="barra">
-<a class="marca" th:href="@{/reportes}">Califica <span>★</span></a>
-<nav aria-label="Reportes">
-<a th:href="@{/reportes}">Categorías</a>
-<a th:href="@{/reportes/usuarios}">Usuarios</a>
-</nav></header>
+<header th:replace="~{fragments :: nav('categorias')}"></header>
+
 <main>
-<h1>Reportes por categoría</h1>
-<table><thead><tr><th>Categoría</th><th>Streams</th><th>Calificaciones</th><th>Promedio</th></tr></thead>
-<tbody><tr th:each="fila : ${categorias}">
-<td th:text="${fila.categoria}"></td><td th:text="${fila.streams}"></td>
-<td th:text="${fila.calificaciones}"></td>
-<td th:text="${fila.calificaciones == 0 ? 'Sin calificaciones' : #numbers.formatDecimal(fila.promedio, 1, 2)}"></td>
-</tr></tbody></table>
+    <h1>Reporte por categoría</h1>
+    <p class="intro">Streams y calificaciones agrupados por categoría, del mejor al peor promedio.</p>
+
+    <table class="tabla" th:unless="${categorias.isEmpty()}">
+        <thead>
+        <tr><th>Categoría</th><th>Streams</th><th>Calificaciones</th><th>Promedio</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${categorias}">
+            <td th:text="${c.categoria()}">Programación</td>
+            <td th:text="${c.streams()}">2</td>
+            <td th:text="${c.calificaciones()}">3</td>
+            <td>
+                <span class="estrellas" aria-hidden="true"
+                      th:text="${#strings.repeat('★', c.estrellas()) + #strings.repeat('☆', 5 - c.estrellas())}">★★★★☆</span>
+                <span class="tenue"
+                      th:text="${c.calificaciones() == 0 ? 'Sin calificar' : #numbers.formatDecimal(c.promedio(), 1, 1)}">4,5</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="vacio" th:if="${categorias.isEmpty()}">Todavía no hay streams registrados.</p>
 </main>
 </body>
 </html>
-

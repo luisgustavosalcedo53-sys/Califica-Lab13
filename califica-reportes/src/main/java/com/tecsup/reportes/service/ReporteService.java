@@ -1,92 +1,152 @@
 package com.tecsup.reportes.service;
 
-import static com.tecsup.reportes.model.Datos.*;
-
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.tecsup.reportes.model.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.util.*;
+import java.util.function.Supplier;
+
+/**
+ * Obtiene los datos de los tres microservicios con base de datos y arma los
+ * modelos de cada reporte. Este servicio no guarda nada: solo lee y calcula.
+ */
 @Service
 public class ReporteService {
+
     private final RestClient usuarios;
     private final RestClient streams;
     private final RestClient calificaciones;
 
-    public ReporteService(@Value("${servicios.usuarios.url}") String usuariosUrl,
+    public ReporteService(RestClient.Builder builder,
+                          @Value("${servicios.usuarios.url}") String usuariosUrl,
                           @Value("${servicios.streams.url}") String streamsUrl,
                           @Value("${servicios.calificaciones.url}") String calificacionesUrl) {
-        usuarios = cliente(usuariosUrl);
-        streams = cliente(streamsUrl);
-        calificaciones = cliente(calificacionesUrl);
-    }
-
-    private static RestClient cliente(String url) {
         var factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofSeconds(2));
-        factory.setReadTimeout(Duration.ofSeconds(3));
-        return RestClient.builder().baseUrl(url).requestFactory(factory).build();
+        factory.setConnectTimeout(2000);
+        factory.setReadTimeout(3000);
+        builder = builder.clone().requestFactory(factory);
+        this.usuarios = builder.clone().baseUrl(usuariosUrl).build();
+        this.streams = builder.clone().baseUrl(streamsUrl).build();
+        this.calificaciones = builder.clone().baseUrl(calificacionesUrl).build();
     }
 
-    private static <T> List<T> lista(RestClient cliente, String servicio, String ruta, Class<T[]> tipo) {
+    // ------------------------------------------------------------------ reportes
+
+    /** Cantidad de streams, de calificaciones y promedio por categoría (mejor promedio primero). */
+    public List<ReporteCategoria> porCategoria() {
+        List<Stream> todos = listarStreams();
+        Map<Long, List<Calificacion>> cals = calificacionesPorStream(todos);
+
+        Map<String, List<Stream>> porCategoria = new TreeMap<>();
+        for (Stream s : todos) {
+            porCategoria.computeIfAbsent(s.categoria(), k -> new ArrayList<>()).add(s);
+        }
+
+        List<ReporteCategoria> reporte = new ArrayList<>();
+        for (Map.Entry<String, List<Stream>> e : porCategoria.entrySet()) {
+            List<Calificacion> deLaCategoria = new ArrayList<>();
+            for (Stream s : e.getValue()) {
+                deLaCategoria.addAll(cals.get(s.id()));
+            }
+            reporte.add(new ReporteCategoria(e.getKey(), e.getValue().size(),
+                    deLaCategoria.size(), promedio(deLaCategoria)));
+        }
+        reporte.sort(Comparator.comparingDouble(ReporteCategoria::promedio).reversed());
+        return reporte;
+    }
+
+    /** Por cada usuario: cuántas calificaciones dio y su promedio (más activo primero). */
+    public List<ResumenUsuario> porUsuario() {
+        List<Usuario> todos = llamar("usuarios", () -> usuarios.get().uri("/api/usuarios")
+                .retrieve().body(new ParameterizedTypeReference<List<Usuario>>() {}));
+        List<Calificacion> cals = todasLasCalificaciones(listarStreams());
+
+        List<ResumenUsuario> reporte = new ArrayList<>();
+        for (Usuario u : todos) {
+            List<Calificacion> delUsuario = cals.stream()
+                    .filter(c -> c.usuarioId().equals(u.id()))
+                    .toList();
+            reporte.add(new ResumenUsuario(u.id(), u.nombre(), u.email(), delUsuario.size(), promedio(delUsuario)));
+        }
+        reporte.sort(Comparator.comparingInt(ResumenUsuario::calificaciones).reversed());
+        return reporte;
+    }
+
+    /** Los streams que calificó un usuario, del más reciente al más antiguo. */
+    public PerfilUsuario perfil(Long usuarioId) {
+        Usuario usuario = buscarUsuario(usuarioId);
+        List<Stream> todos = listarStreams();
+        Map<Long, List<Calificacion>> cals = calificacionesPorStream(todos);
+
+        List<PerfilUsuario.Item> items = new ArrayList<>();
+        List<Calificacion> delUsuario = new ArrayList<>();
+        for (Stream s : todos) {
+            for (Calificacion c : cals.get(s.id())) {
+                if (c.usuarioId().equals(usuarioId)) {
+                    delUsuario.add(c);
+                    items.add(new PerfilUsuario.Item(s.titulo(), s.categoria(),
+                            c.puntuacion(), c.comentario(), c.fecha()));
+                }
+            }
+        }
+        items.sort(Comparator.comparing(PerfilUsuario.Item::fecha, Comparator.nullsLast(Comparator.reverseOrder())));
+        return new PerfilUsuario(usuario, items, promedio(delUsuario));
+    }
+
+    // ------------------------------------------------------------------ llamadas HTTP
+
+    private Usuario buscarUsuario(Long id) {
+        return llamar("usuarios", () -> usuarios.get().uri("/api/usuarios/{id}", id)
+                .exchange((pedido, respuesta) -> {
+                    if (respuesta.getStatusCode().value() == 404)
+                        throw new UsuarioNoEncontradoException();
+                    if (respuesta.getStatusCode().isError())
+                        throw new ServicioNoDisponibleException("usuarios");
+                    return respuesta.bodyTo(Usuario.class);
+                }));
+    }
+
+    private List<Stream> listarStreams() {
+        return llamar("streams", () -> streams.get().uri("/api/streams")
+                .retrieve().body(new ParameterizedTypeReference<List<Stream>>() {}));
+    }
+
+    private Map<Long, List<Calificacion>> calificacionesPorStream(List<Stream> lista) {
+        Map<Long, List<Calificacion>> resultado = new HashMap<>();
+        for (Stream s : lista) {
+            List<Calificacion> cals = llamar("calificaciones", () -> calificaciones.get()
+                    .uri("/api/calificaciones?streamId={id}", s.id())
+                    .retrieve().body(new ParameterizedTypeReference<List<Calificacion>>() {}));
+            resultado.put(s.id(), cals == null ? List.of() : cals);
+        }
+        return resultado;
+    }
+
+    private List<Calificacion> todasLasCalificaciones(List<Stream> lista) {
+        List<Calificacion> todas = new ArrayList<>();
+        calificacionesPorStream(lista).values().forEach(todas::addAll);
+        return todas;
+    }
+
+    /** Ejecuta una llamada y convierte cualquier falla de red en un mensaje claro. */
+    private static <T> T llamar(String servicio, Supplier<T> llamada) {
         try {
-            return Arrays.asList(Objects.requireNonNull(
-                cliente.get().uri(ruta).retrieve().body(tipo)));
-        } catch (RestClientException | NullPointerException error) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                "El servicio de " + servicio + " no está disponible", error);
+            return llamada.get();
+        } catch (ResourceAccessException e) {
+            throw new ServicioNoDisponibleException(servicio);
+        } catch (RestClientException e) {
+            throw new ServicioNoDisponibleException(servicio);
         }
     }
 
-    private List<Stream> streams() {
-        return lista(streams, "streams", "/api/streams", Stream[].class);
-    }
-
-    private List<Usuario> usuarios() {
-        return lista(usuarios, "usuarios", "/api/usuarios", Usuario[].class);
-    }
-
-    private List<Detalle> historial(List<Stream> catalogo) {
-        return catalogo.stream().flatMap(stream -> lista(calificaciones, "calificaciones",
-            "/api/calificaciones?streamId=" + stream.id(), Calificacion[].class)
-            .stream().map(nota -> new Detalle(stream, nota))).toList();
-    }
-
-    private static DoubleSummaryStatistics resumen(List<Detalle> historial) {
-        return historial.stream().mapToDouble(d -> d.calificacion().puntuacion()).summaryStatistics();
-    }
-
-    public List<ReporteCategoria> porCategoria() {
-        var catalogo = streams();
-        var notas = historial(catalogo).stream().collect(Collectors.groupingBy(d -> d.stream().categoria()));
-        var grupos = catalogo.stream().collect(Collectors.groupingBy(Stream::categoria, TreeMap::new, Collectors.counting()));
-        return grupos.entrySet().stream().map(grupo -> {
-            var cifras = resumen(notas.getOrDefault(grupo.getKey(), List.of()));
-            return new ReporteCategoria(grupo.getKey(), grupo.getValue(), cifras.getCount(), cifras.getAverage());
-        }).toList();
-    }
-
-    public List<ResumenUsuario> porUsuario() {
-        var personas = usuarios();
-        var notas = historial(streams()).stream().collect(Collectors.groupingBy(d -> d.calificacion().usuarioId()));
-        return personas.stream().map(persona -> {
-            var cifras = resumen(notas.getOrDefault(persona.id(), List.of()));
-            return new ResumenUsuario(persona, cifras.getCount(), cifras.getAverage());
-        }).toList();
-    }
-
-    public PerfilUsuario perfil(long id) {
-        var usuario = usuarios().stream().filter(persona -> persona.id() == id).findFirst()
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El usuario no existe"));
-        var notas = historial(streams()).stream()
-            .filter(d -> d.calificacion().usuarioId() == id)
-            .sorted(Comparator.comparing((Detalle d) -> d.calificacion().fecha()).reversed()).toList();
-        return new PerfilUsuario(usuario, notas);
+    private static double promedio(List<Calificacion> lista) {
+        return lista.stream().mapToInt(Calificacion::puntuacion).average().orElse(0);
     }
 }
+

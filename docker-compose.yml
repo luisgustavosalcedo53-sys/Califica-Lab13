@@ -32,6 +32,7 @@ services:
       - calificaciones-service
   califica-reportes:
     build: ./califica-reportes
+    container_name: califica-reportes
     ports:
       - "8084:8084"
     environment:
@@ -42,8 +43,10 @@ services:
       - usuarios-service
       - streams-service
       - calificaciones-service
+
   recomendaciones-service:
     build: ./recomendaciones-service
+    container_name: recomendaciones-service
     ports:
       - "8085:8085"
     environment:
@@ -54,3 +57,4 @@ services:
       - usuarios-service
       - streams-service
       - calificaciones-service
+

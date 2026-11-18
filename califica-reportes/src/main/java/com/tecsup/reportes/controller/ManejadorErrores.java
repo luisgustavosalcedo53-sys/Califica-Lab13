@@ -1,17 +1,28 @@
 package com.tecsup.reportes.controller;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.ModelAndView;
+import com.tecsup.reportes.service.ServicioNoDisponibleException;
+import com.tecsup.reportes.service.UsuarioNoEncontradoException;
+import org.springframework.http.HttpStatus;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
+/** Muestra la vista error.html con un mensaje claro cuando algo falla. */
 @ControllerAdvice
 public class ManejadorErrores {
-    @ExceptionHandler(ResponseStatusException.class)
-    public ModelAndView mostrar(ResponseStatusException error) {
-        var vista = new ModelAndView("error");
-        vista.setStatus(error.getStatusCode());
-        vista.addObject("codigo", error.getStatusCode().value());
-        vista.addObject("mensaje", error.getReason());
-        return vista;
+
+    @ExceptionHandler(ServicioNoDisponibleException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public String servicioNoDisponible(ServicioNoDisponibleException e, Model model) {
+        model.addAttribute("mensaje", e.getMessage());
+        return "error";
+    }
+
+    @ExceptionHandler(UsuarioNoEncontradoException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String usuarioNoEncontrado(UsuarioNoEncontradoException e, Model model) {
+        model.addAttribute("mensaje", e.getMessage());
+        return "error";
     }
 }

@@ -1,26 +1,41 @@
+// recomendaciones-service: microservicio en Go que recomienda streams a un usuario.
+// No tiene base de datos: consulta por HTTP a usuarios-service, streams-service
+// y calificaciones-service.
+//
+//	go run .
+//	GET http://localhost:8085/api/recomendaciones/1?limite=3
 package main
 
 import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
-func entorno(clave, defecto string) string {
-	if valor := os.Getenv(clave); valor != "" {
-		return valor
+func main() {
+	cfg := configuracion{
+		puerto:            variable("PUERTO", "8085"),
+		usuariosURL:       variable("USUARIOS_URL", "http://localhost:8081"),
+		streamsURL:        variable("STREAMS_URL", "http://localhost:8082"),
+		calificacionesURL: variable("CALIFICACIONES_URL", "http://localhost:8083"),
 	}
-	return defecto
+	api := nuevoCliente(cfg)
+
+	http.HandleFunc("GET /salud", salud)
+	http.HandleFunc("GET /api/recomendaciones/{usuarioId}", recomendar(api))
+
+	log.Printf("recomendaciones-service escuchando en :%s", cfg.puerto)
+	log.Fatal(http.ListenAndServe(":"+cfg.puerto, nil))
 }
 
-func main() {
-	c := cliente{
-		http:           &http.Client{Timeout: 3 * time.Second},
-		usuarios:       entorno("USUARIOS_URL", "http://localhost:8081"),
-		streams:        entorno("STREAMS_URL", "http://localhost:8082"),
-		calificaciones: entorno("CALIFICACIONES_URL", "http://localhost:8083"),
+type configuracion struct {
+	puerto, usuariosURL, streamsURL, calificacionesURL string
+}
+
+// variable lee una variable de entorno o usa el valor por defecto.
+func variable(nombre, porDefecto string) string {
+	if v := os.Getenv(nombre); v != "" {
+		return v
 	}
-	servidor := &http.Server{Addr: ":8085", Handler: rutas(c), ReadHeaderTimeout: 5 * time.Second}
-	log.Fatal(servidor.ListenAndServe())
+	return porDefecto
 }

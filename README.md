@@ -18,7 +18,7 @@ docker compose ps
 | 8084 | Reportes MVC | /reportes |
 | 8085 | Recomendaciones en Go | /api/recomendaciones/3?limite=3 |
 
-Reportes también ofrece `/reportes/usuarios` y `/reportes/usuarios/1`. La API Go responde a `/salud` y excluye el contenido ya calificado. Ordena por promedio más un punto de afinidad cuando el usuario otorgó al menos cuatro estrellas a algún stream de la categoría. En caso de empate, ordena por ID.
+Reportes también ofrece `/reportes/usuarios` y `/reportes/usuarios/1`. La API Go responde a `/salud` y excluye el contenido ya calificado. Ordena por promedio más un punto de afinidad cuando el usuario otorgó al menos cuatro estrellas a algún stream de la categoría. En caso de empate, prioriza el stream con mayor cantidad de calificaciones. Los dos módulos nuevos se integraron desde el ZIP de referencia del laboratorio.
 
 ## Pruebas
 
@@ -29,4 +29,5 @@ Las pruebas de Go se ejecutan con `go test ./...` desde `recomendaciones-service
 ```sh
 docker images 'califica-microservicios-*'
 ```
+
 

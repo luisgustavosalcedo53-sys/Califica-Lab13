@@ -1,3 +1,3 @@
-module califica/recomendaciones
+module recomendaciones-service
 
 go 1.22

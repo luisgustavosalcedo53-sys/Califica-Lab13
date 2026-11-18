@@ -1,10 +1,13 @@
+# Etapa 1: compilar el binario de Go (sin dependencias de C para que funcione en cualquier Linux)
 FROM golang:1.22-alpine AS build
 WORKDIR /app
-COPY go.mod *.go ./
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /recomendaciones .
+COPY go.mod ./
+COPY *.go ./
+RUN CGO_ENABLED=0 go build -o recomendaciones .
 
-FROM alpine:3.22
-COPY --from=build /recomendaciones /usr/local/bin/recomendaciones
-USER 65534:65534
+# Etapa 2: imagen mínima que solo contiene el binario
+FROM alpine:3.20
+WORKDIR /app
+COPY --from=build /app/recomendaciones .
 EXPOSE 8085
-ENTRYPOINT ["/usr/local/bin/recomendaciones"]
+ENTRYPOINT ["./recomendaciones"]

@@ -1,23 +1,14 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Error de reportes | Califica</title>
-<link rel="stylesheet" th:href="@{/css/estilos.css}">
-</head>
+<head th:replace="~{fragments :: head('Error')}"></head>
 <body>
-<header class="barra">
-<a class="marca" th:href="@{/reportes}">Califica <span>★</span></a>
-<nav aria-label="Reportes">
-<a th:href="@{/reportes}">Categorías</a>
-<a th:href="@{/reportes/usuarios}">Usuarios</a>
-</nav></header>
+<header th:replace="~{fragments :: nav('')}"></header>
+
 <main>
-<h1 th:text="|Error ${codigo}|">Error</h1>
-<p th:text="${mensaje}"></p>
-<a th:href="@{/reportes}">Volver a reportes</a>
+    <h1>No se pudo generar el reporte</h1>
+    <p class="aviso aviso-error" role="alert"
+       th:text="${mensaje != null ? mensaje : 'Ocurrió un error inesperado'}">El servicio de streams no está disponible</p>
+    <a th:href="@{/reportes}" class="volver">Volver a los reportes</a>
 </main>
 </body>
 </html>
-
