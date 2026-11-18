@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reportes por categoría | Califica</title>
+<link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+<header class="topbar"><nav class="container">
+<a th:href="@{/reportes}">Califica · Reportes</a>
+<a th:href="@{/reportes/usuarios}">Usuarios</a>
+</nav></header>
+<main class="container">
+<h1>Reportes por categoría</h1>
+<table><thead><tr><th>Categoría</th><th>Streams</th><th>Calificaciones</th><th>Promedio</th></tr></thead>
+<tbody><tr th:each="fila : ${categorias}">
+<td th:text="${fila.categoria}"></td><td th:text="${fila.streams}"></td>
+<td th:text="${fila.calificaciones}"></td>
+<td th:text="${fila.calificaciones == 0 ? 'Sin calificaciones' : #numbers.formatDecimal(fila.promedio, 1, 2)}"></td>
+</tr></tbody></table>
+</main>
+</body>
+</html>

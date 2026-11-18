@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Error de reportes | Califica</title>
+<link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+<header class="topbar"><nav class="container">
+<a th:href="@{/reportes}">Califica · Reportes</a>
+<a th:href="@{/reportes/usuarios}">Usuarios</a>
+</nav></header>
+<main class="container">
+<h1 th:text="|Error ${codigo}|">Error</h1>
+<p th:text="${mensaje}"></p>
+<a th:href="@{/reportes}">Volver a reportes</a>
+</main>
+</body>
+</html>

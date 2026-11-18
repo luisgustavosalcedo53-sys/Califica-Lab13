@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Error')}"></head>
+<body>
+<header th:replace="~{fragments :: nav('')}"></header>
+
+<main>
+    <h1>No se pudo completar la operación</h1>
+    <p class="aviso aviso-error" role="alert" th:text="${message}">El servicio de streams no está disponible</p>
+    <p class="intro">Revise que los cuatro servicios estén en ejecución.</p>
+    <a th:href="@{/streams}" class="volver">Volver a streams</a>
+</main>
+</body>
+</html>

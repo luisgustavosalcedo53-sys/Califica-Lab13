@@ -1,0 +1,56 @@
+name: califica-microservicios
+services:
+  usuarios-service:
+    build: ./usuarios-service
+    ports:
+      - "8081:8081"
+  streams-service:
+    build: ./streams-service
+    ports:
+      - "8082:8082"
+  calificaciones-service:
+    build: ./calificaciones-service
+    ports:
+      - "8083:8083"
+    environment:
+      SERVICIOS_USUARIOS_URL: http://usuarios-service:8081
+      SERVICIOS_STREAMS_URL: http://streams-service:8082
+    depends_on:
+      - usuarios-service
+      - streams-service
+  califica-web:
+    build: ./califica-web
+    ports:
+      - "8080:8080"
+    environment:
+      SERVICIOS_USUARIOS_URL: http://usuarios-service:8081
+      SERVICIOS_STREAMS_URL: http://streams-service:8082
+      SERVICIOS_CALIFICACIONES_URL: http://calificaciones-service:8083
+    depends_on:
+      - usuarios-service
+      - streams-service
+      - calificaciones-service
+  califica-reportes:
+    build: ./califica-reportes
+    ports:
+      - "8084:8084"
+    environment:
+      SERVICIOS_USUARIOS_URL: http://usuarios-service:8081
+      SERVICIOS_STREAMS_URL: http://streams-service:8082
+      SERVICIOS_CALIFICACIONES_URL: http://calificaciones-service:8083
+    depends_on:
+      - usuarios-service
+      - streams-service
+      - calificaciones-service
+  recomendaciones-service:
+    build: ./recomendaciones-service
+    ports:
+      - "8085:8085"
+    environment:
+      USUARIOS_URL: http://usuarios-service:8081
+      STREAMS_URL: http://streams-service:8082
+      CALIFICACIONES_URL: http://calificaciones-service:8083
+    depends_on:
+      - usuarios-service
+      - streams-service
+      - calificaciones-service

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo} + ' | Califica'">Califica</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+
+<body>
+
+<header th:fragment="nav(activo)" class="barra">
+    <a th:href="@{/streams}" class="marca">Califica<span aria-hidden="true">★</span></a>
+    <nav>
+        <a th:href="@{/streams}" th:classappend="${activo == 'streams'} ? 'activo'">Streams</a>
+        <a th:href="@{/usuarios}" th:classappend="${activo == 'usuarios'} ? 'activo'">Usuarios</a>
+    </nav>
+</header>
+
+<div th:fragment="mensajes">
+    <p class="aviso aviso-error" role="alert" th:if="${error}" th:text="${error}"></p>
+    <p class="aviso aviso-ok" role="status" th:if="${ok}" th:text="${ok}"></p>
+</div>
+
+</body>
+</html>

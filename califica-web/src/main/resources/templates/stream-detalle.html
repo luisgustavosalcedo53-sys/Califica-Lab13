@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head(${resumen.stream().titulo()})}"></head>
+<body>
+<header th:replace="~{fragments :: nav('streams')}"></header>
+
+<main>
+    <a th:href="@{/streams}" class="volver">Volver a streams</a>
+
+    <h1 th:text="${resumen.stream().titulo()}">Título</h1>
+    <p class="intro" th:text="${resumen.stream().categoria()}">Categoría</p>
+
+    <div class="promedio">
+        <span class="promedio-numero"
+              th:text="${resumen.total() == 0 ? '–' : #numbers.formatDecimal(resumen.promedio(), 1, 1)}">4,5</span>
+        <div>
+            <span class="estrellas" aria-hidden="true"
+                  th:text="${#strings.repeat('★', resumen.promedioRedondeado()) + #strings.repeat('☆', 5 - resumen.promedioRedondeado())}">★★★★☆</span>
+            <span class="tenue"
+                  th:text="${resumen.total() == 1 ? '1 calificación' : resumen.total() + ' calificaciones'}">2 calificaciones</span>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments :: mensajes}"></div>
+
+    <section class="formulario">
+        <h2>Calificar</h2>
+        <p class="vacio" th:if="${usuarios.isEmpty()}">
+            Para calificar primero <a th:href="@{/usuarios}">registra un usuario</a>.
+        </p>
+        <form th:unless="${usuarios.isEmpty()}"
+              th:action="@{/streams/{id}/calificaciones(id=${resumen.stream().id()})}" method="post">
+            <label>Usuario
+                <select name="usuarioId" required>
+                    <option value="">Elige un usuario</option>
+                    <option th:each="u : ${usuarios}" th:value="${u.id()}" th:text="${u.nombre()}">Ana</option>
+                </select>
+            </label>
+
+            <fieldset>
+                <legend>Puntuación</legend>
+                <!-- Orden 5→1 en el HTML; CSS lo invierte para mostrar 1→5 -->
+                <div class="selector-estrellas">
+                    <input type="radio" id="p5" name="puntuacion" value="5" required><label for="p5" title="5 de 5">★</label>
+                    <input type="radio" id="p4" name="puntuacion" value="4"><label for="p4" title="4 de 5">★</label>
+                    <input type="radio" id="p3" name="puntuacion" value="3"><label for="p3" title="3 de 5">★</label>
+                    <input type="radio" id="p2" name="puntuacion" value="2"><label for="p2" title="2 de 5">★</label>
+                    <input type="radio" id="p1" name="puntuacion" value="1"><label for="p1" title="1 de 5">★</label>
+                </div>
+            </fieldset>
+
+            <label>Comentario <span class="tenue">(opcional)</span>
+                <textarea name="comentario" rows="3" maxlength="280"></textarea>
+            </label>
+            <button type="submit">Guardar calificación</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Opiniones</h2>
+        <p class="vacio" th:if="${calificaciones.isEmpty()}">Nadie ha calificado este stream todavía.</p>
+        <ul class="opiniones" th:unless="${calificaciones.isEmpty()}">
+            <li th:each="c : ${calificaciones}">
+                <div class="opinion-cabecera">
+                    <strong th:text="${nombres.get(c.usuarioId())}">Ana Torres</strong>
+                    <span class="estrellas" th:attr="aria-label=${c.puntuacion()} + ' de 5'"
+                          th:text="${#strings.repeat('★', c.puntuacion()) + #strings.repeat('☆', 5 - c.puntuacion())}">★★★★★</span>
+                    <time class="tenue" th:text="${#temporals.format(c.fecha(), 'dd/MM/yyyy HH:mm')}">15/10/2026</time>
+                </div>
+                <p th:unless="${#strings.isEmpty(c.comentario())}" th:text="${c.comentario()}">Comentario</p>
+            </li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

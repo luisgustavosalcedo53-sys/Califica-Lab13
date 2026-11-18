@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Usuarios')}"></head>
+<body>
+<header th:replace="~{fragments :: nav('usuarios')}"></header>
+
+<main>
+    <h1>Usuarios</h1>
+    <p class="intro">Quienes pueden calificar streams. Cada usuario califica un stream una sola vez.</p>
+
+    <div th:replace="~{fragments :: mensajes}"></div>
+
+    <table class="tabla" th:unless="${usuarios.isEmpty()}">
+        <thead>
+        <tr><th>Nombre</th><th>Email</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="u : ${usuarios}">
+            <td th:text="${u.nombre()}">Ana Torres</td>
+            <td class="tenue" th:text="${u.email()}">ana@tecsup.edu.pe</td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="vacio" th:if="${usuarios.isEmpty()}">Todavía no hay usuarios. Registra el primero.</p>
+
+    <section class="formulario">
+        <h2>Nuevo usuario</h2>
+        <form th:action="@{/usuarios}" method="post">
+            <label>Nombre
+                <input name="nombre" required maxlength="80">
+            </label>
+            <label>Email
+                <input name="email" type="email" required maxlength="120">
+            </label>
+            <button type="submit">Registrar usuario</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

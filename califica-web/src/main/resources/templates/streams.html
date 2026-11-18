@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Streams')}"></head>
+<body>
+<header th:replace="~{fragments :: nav('streams')}"></header>
+
+<main>
+    <h1>Streams</h1>
+    <p class="intro">Ordenados por calificación promedio. Entra a uno para calificarlo.</p>
+
+    <div th:replace="~{fragments :: mensajes}"></div>
+
+    <ol class="ranking" th:unless="${resumenes.isEmpty()}">
+        <li th:each="r : ${resumenes}">
+            <div class="ranking-texto">
+                <a th:href="@{/streams/{id}(id=${r.stream().id()})}" th:text="${r.stream().titulo()}">Título</a>
+                <span class="tenue" th:text="${r.stream().categoria()}">Categoría</span>
+            </div>
+            <div class="ranking-nota">
+                <span class="estrellas" aria-hidden="true"
+                      th:text="${#strings.repeat('★', r.promedioRedondeado()) + #strings.repeat('☆', 5 - r.promedioRedondeado())}">★★★★☆</span>
+                <span class="tenue"
+                      th:text="${r.total() == 0 ? 'Sin calificar' : #numbers.formatDecimal(r.promedio(), 1, 1) + ' (' + r.total() + ')'}">4,5 (2)</span>
+            </div>
+        </li>
+    </ol>
+    <p class="vacio" th:if="${resumenes.isEmpty()}">Todavía no hay streams. Crea el primero con el formulario.</p>
+
+    <section class="formulario">
+        <h2>Nuevo stream</h2>
+        <form th:action="@{/streams}" method="post">
+            <label>Título
+                <input name="titulo" required maxlength="100">
+            </label>
+            <label>Categoría
+                <input name="categoria" maxlength="40" placeholder="General">
+            </label>
+            <button type="submit">Crear stream</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

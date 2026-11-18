@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reportes por usuario | Califica</title>
+<link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+<header class="topbar"><nav class="container">
+<a th:href="@{/reportes}">Califica · Reportes</a>
+<a th:href="@{/reportes/usuarios}">Usuarios</a>
+</nav></header>
+<main class="container">
+<h1>Reportes por usuario</h1>
+<table><thead><tr><th>Usuario</th><th>Calificaciones emitidas</th><th>Promedio otorgado</th></tr></thead>
+<tbody><tr th:each="fila : ${usuarios}">
+<td><a th:href="@{/reportes/usuarios/{id}(id=${fila.usuario.id})}" th:text="${fila.usuario.nombre}"></a></td>
+<td th:text="${fila.calificaciones}"></td>
+<td th:text="${fila.calificaciones == 0 ? 'Sin calificaciones' : #numbers.formatDecimal(fila.promedio, 1, 2)}"></td>
+</tr></tbody></table>
+</main>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historial de usuario | Califica</title>
+<link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+<header class="topbar"><nav class="container">
+<a th:href="@{/reportes}">Califica · Reportes</a>
+<a th:href="@{/reportes/usuarios}">Usuarios</a>
+</nav></header>
+<main class="container">
+<h1 th:text="${perfil.usuario.nombre}"></h1>
+<h2>Historial de calificaciones</h2>
+<p th:if="${perfil.historial.isEmpty()}">Este usuario todavía no ha calificado streams.</p>
+<table th:unless="${perfil.historial.isEmpty()}"><thead><tr><th>Stream</th><th>Puntuación</th><th>Comentario</th><th>Fecha</th></tr></thead>
+<tbody><tr th:each="fila : ${perfil.historial}">
+<td th:text="${fila.stream.titulo}"></td><td th:text="${fila.calificacion.puntuacion}"></td>
+<td th:text="${fila.calificacion.comentario}"></td>
+<td th:text="${#temporals.format(fila.calificacion.fecha, 'dd/MM/yyyy HH:mm')}"></td>
+</tr></tbody></table>
+</main>
+</body>
+</html>

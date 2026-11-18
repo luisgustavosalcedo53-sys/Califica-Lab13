@@ -1,0 +1,71 @@
+{
+  "info": {
+    "name": "Califica Lab 13",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "go",
+      "value": "http://localhost:8085"
+    }
+  ],
+  "item": [
+    {
+      "name": "María Huamán",
+      "request": {
+        "method": "GET",
+        "url": "{{go}}/api/recomendaciones/3?limite=3"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Contenido JSON esperado', () => { const j = pm.response.json(); pm.expect(j.usuario.id).to.eql(3); pm.expect(j.recomendaciones.map(x => x.id)).not.to.include(2); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuario inexistente",
+      "request": {
+        "method": "GET",
+        "url": "{{go}}/api/recomendaciones/99"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "pm.test('Contenido JSON esperado', () => { const j = pm.response.json(); pm.expect(j.error).to.eql('El usuario no existe'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calificaciones detenido",
+      "request": {
+        "method": "GET",
+        "url": "{{go}}/api/recomendaciones/3"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 503', () => pm.response.to.have.status(503));",
+              "pm.test('Contenido JSON esperado', () => { const j = pm.response.json(); pm.expect(j.error).to.eql('El servicio de calificaciones no está disponible'); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
